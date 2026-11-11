@@ -1,0 +1,1398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>APTSMS - Jelicuon-Cabugao National High School</title>
+    <!-- Tailwind CSS for modern responsive design -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#1e3a8a', // Deep blue
+                        secondary: '#d97706', // Gold / Amber
+                        dark: '#0f172a',
+                        light: '#f8fafc'
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen text-gray-800">
+
+    <!-- ================= AUTHENTICATION & LOGIN SCREEN ================= -->
+    <div id="loginScreen" class="fixed inset-0 bg-gradient-to-br from-primary to-dark z-50 flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden">
+            <div class="bg-primary p-6 text-white text-center relative">
+                <div class="absolute top-4 right-4 bg-secondary text-xs uppercase font-bold px-2 py-1 rounded">DepEd PH</div>
+                <div class="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-3 text-2xl font-bold text-secondary border border-secondary/30">
+                    <i class="fa-solid fa-graduation-cap"></i>
+                </div>
+                <h1 class="text-xl font-bold">APTSMS</h1>
+                <p class="text-xs text-blue-200 mt-1">Jelicuon-Cabugao National High School</p>
+            </div>
+            <div class="p-8">
+                <div id="loginError" class="hidden mb-4 p-3 bg-red-100 text-red-700 text-sm rounded border border-red-200"></div>
+                <form id="loginForm" onsubmit="handleLogin(event)">
+                    <div class="mb-4">
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-gray-600 mb-2">Username</label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400"><i class="fa-solid fa-user"></i></span>
+                            <input type="text" id="loginUser" required class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:outline-none" placeholder="e.g. admin, teacher1, adviser1, student1">
+                        </div>
+                    </div>
+                    <div class="mb-6">
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-gray-600 mb-2">Password</label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400"><i class="fa-solid fa-lock"></i></span>
+                            <input type="password" id="loginPass" required class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:outline-none" placeholder="••••••••">
+                        </div>
+                    </div>
+                    <button type="submit" class="w-full bg-primary hover:bg-blue-900 text-white font-medium py-2.5 rounded-lg transition duration-200 shadow-md">Sign In</button>
+                </form>
+
+                <!-- Quick Demo Buttons -->
+                <div class="mt-6 pt-6 border-t border-gray-200">
+                    <p class="text-xs text-gray-500 text-center mb-3">Quick Demo Logins (Click to fill):</p>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="fillLogin('admin', 'admin123')" class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 py-1.5 px-2 rounded font-medium border">Admin</button>
+                        <button onclick="fillLogin('teacher1', 'teacher123')" class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 py-1.5 px-2 rounded font-medium border">Teacher</button>
+                        <button onclick="fillLogin('adviser1', 'teacher123')" class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 py-1.5 px-2 rounded font-medium border">Adviser</button>
+                        <button onclick="fillLogin('student1', 'student123')" class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 py-1.5 px-2 rounded font-medium border">Student</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= MAIN APP CONTAINER ================= -->
+    <div id="appContainer" class="hidden flex h-screen overflow-hidden">
+        
+        <!-- SIDEBAR NAVIGATION -->
+        <aside id="sidebar" class="w-64 bg-dark text-white flex flex-col transition-all duration-300 z-30 shadow-xl">
+            <div class="p-5 border-b border-gray-800 flex items-center space-x-3">
+                <div class="bg-secondary p-2 rounded-lg text-white font-bold"><i class="fa-solid fa-graduation-cap"></i></div>
+                <div>
+                    <h2 class="font-bold text-sm tracking-wide">APTSMS JCNHS</h2>
+                    <p class="text-xs text-gray-400" id="sidebarRoleLabel">Role</p>
+                </div>
+            </div>
+            <nav class="flex-1 px-4 py-6 space-y-1.5 overflow-y-auto" id="sidebarMenu">
+                <!-- Dynamically populated based on role -->
+            </nav>
+            <div class="p-4 border-t border-gray-800">
+                <button onclick="logout()" class="w-full flex items-center space-x-3 px-4 py-2.5 text-sm text-red-400 hover:bg-red-500/10 rounded-lg transition">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                    <span>Sign Out</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- CONTENT AREA -->
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <!-- TOP BAR -->
+            <header class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 z-20 shadow-sm">
+                <div class="flex items-center space-x-4">
+                    <button onclick="toggleSidebar()" class="text-gray-500 hover:text-primary"><i class="fa-solid fa-bars text-lg"></i></button>
+                    <h1 id="pageTitle" class="text-lg font-bold text-gray-800">Dashboard</h1>
+                </div>
+                <div class="flex items-center space-x-5">
+                    <!-- Notifications Dropdown -->
+                    <div class="relative">
+                        <button onclick="toggleNotifications()" class="relative p-2 text-gray-600 hover:text-primary rounded-full hover:bg-gray-100 transition">
+                            <i class="fa-solid fa-bell text-lg"></i>
+                            <span id="notifBadge" class="absolute top-1 right-1 bg-red-500 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold">0</span>
+                        </button>
+                        <div id="notifDropdown" class="hidden absolute right-0 mt-2 w-80 bg-white border border-gray-200 rounded-xl shadow-2xl py-2 z-50">
+                            <div class="px-4 py-2 border-b border-gray-100 flex justify-between items-center">
+                                <span class="font-bold text-xs uppercase text-gray-500">Notifications & Deadlines</span>
+                                <button onclick="markAllNotifsRead()" class="text-xs text-primary hover:underline">Mark all read</button>
+                            </div>
+                            <div id="notifList" class="max-h-72 overflow-y-auto divide-y divide-gray-100 text-sm">
+                                <!-- Populated dynamically -->
+                            </div>
+                        </div>
+                    </div>
+                    <!-- User Profile info -->
+                    <div class="flex items-center space-x-3 border-l pl-5 border-gray-200">
+                        <div class="w-9 h-9 bg-primary/10 text-primary font-bold rounded-full flex items-center justify-center" id="userAvatar">AD</div>
+                        <div>
+                            <p class="text-sm font-semibold text-gray-700" id="userNameDisplay">Admin User</p>
+                            <p class="text-xs text-gray-400 capitalize" id="userRoleDisplay">Administrator</p>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- MAIN DYNAMIC VIEWS -->
+            <main class="flex-1 overflow-y-auto p-6 bg-gray-50" id="mainContentArea">
+                <!-- VIEW MODULES INJECTED HERE -->
+            </main>
+        </div>
+    </div>
+
+    <!-- GLOBAL MODAL CONTAINER -->
+    <div id="globalModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+        <div id="modalContainer" class="bg-white w-full max-w-xl rounded-2xl shadow-2xl overflow-hidden">
+            <!-- Modal content populated dynamically -->
+        </div>
+    </div>
+
+    <!-- ================= CLIENT-SIDE DATA & LOGIC ================= -->
+    <script>
+        // --- IN-MEMORY DATABASE & SEED DATA ---
+        let db = {
+            currentUser: null,
+            gradingRulesActive: true, // Transmutation ON by default
+            users: [
+                { id: 1, username: 'admin', pass: 'admin123', name: 'Atty. Maria Santos', role: 'administrator', email: 'admin@jcnhs.edu.ph' },
+                { id: 2, username: 'teacher1', pass: 'teacher123', name: 'Juan Dela Cruz', role: 'teacher', subject: 'Mathematics', grade: 8 },
+                { id: 3, username: 'adviser1', pass: 'teacher123', name: 'Ana Reyes', role: 'adviser', section: 'Grade 8 - Section A', subject: 'English', grade: 8 },
+                { id: 4, username: 'student1', pass: 'student123', name: 'Jose Rizal Jr.', role: 'student', lrn: '135792468012', grade: 8, section: 'Grade 8 - Section A' }
+            ],
+            students: [
+                { id: 1, lrn: '135792468012', lastName: 'Rizal Jr.', firstName: 'Jose', sex: 'M', birthDate: '2010-05-12', gradeLevel: 8, section: 'Grade 8 - Section A', guardian: 'Teodora Alonzo (09171234567)', status: 'Active' },
+                { id: 2, lrn: '135792468013', lastName: 'Bonifacio', firstName: 'Andres', sex: 'M', birthDate: '2010-11-30', gradeLevel: 8, section: 'Grade 8 - Section A', guardian: 'Gregoria de Jesus (09182345678)', status: 'Active' },
+                { id: 3, lrn: '135792468014', lastName: 'Aquino', firstName: 'Melchora', sex: 'F', birthDate: '2010-01-06', gradeLevel: 8, section: 'Grade 8 - Section A', guardian: 'Juan Aquino (09193456789)', status: 'Active' },
+                { id: 4, lrn: '135792468015', lastName: 'Del Pilar', firstName: 'Marcelo', sex: 'M', birthDate: '2010-08-30', gradeLevel: 8, section: 'Grade 8 - Section B', guardian: 'Blanca H. (09204567890)', status: 'Active' }
+            ],
+            sections: [
+                { id: 1, name: 'Grade 8 - Section A', gradeLevel: 8, schoolYear: '2025-2026', adviser: 'Ana Reyes' },
+                { id: 2, name: 'Grade 8 - Section B', gradeLevel: 8, schoolYear: '2025-2026', adviser: 'Carlos Garcia' },
+                { id: 3, name: 'Grade 7 - Section A', gradeLevel: 7, schoolYear: '2025-2026', adviser: 'Elena Cruz' }
+            ],
+            subjects: [
+                { id: 1, name: 'Mathematics', weightGroup: 'Core 1 (20/50/30)' },
+                { id: 2, name: 'English', weightGroup: 'Core 1 (20/50/30)' },
+                { id: 3, name: 'Science', weightGroup: 'Core 1 (20/50/30)' },
+                { id: 4, name: 'Filipino', weightGroup: 'Core 1 (20/50/30)' },
+                { id: 5, name: 'Araling Panlipunan', weightGroup: 'Core 1 (20/50/30)' },
+                { id: 6, name: 'Values Education', weightGroup: 'Core 1 (20/50/30)' },
+                { id: 7, name: 'TLE', weightGroup: 'Tech-Voc (20/60/20)' },
+                { id: 8, name: 'MAPEH', weightGroup: 'Tech-Voc (20/60/20)' }
+            ],
+            activities: [
+                { id: 101, subject: 'Mathematics', section: 'Grade 8 - Section A', term: 1, component: 'WW', type: 'quiz', title: 'Quiz 1: Algebraic Expressions', date: '2026-01-15', highestScore: 100 },
+                { id: 102, subject: 'Mathematics', section: 'Grade 8 - Section A', term: 1, component: 'PT', type: 'project', title: 'Performance Task 1: Polynomial Modeling', date: '2026-01-20', highestScore: 120 },
+                { id: 103, subject: 'Mathematics', section: 'Grade 8 - Section A', term: 1, component: 'EX', type: 'Summative Test 1', title: 'Summative Test 1', date: '2026-01-28', highestScore: 50 },
+                { id: 104, subject: 'Mathematics', section: 'Grade 8 - Section A', term: 1, component: 'EX', type: 'Summative Test 2', title: 'Summative Test 2', date: '2026-02-10', highestScore: 50 },
+                { id: 105, subject: 'Mathematics', section: 'Grade 8 - Section A', term: 1, component: 'EX', type: 'Term Examination', title: 'Term Examination', date: '2026-02-25', highestScore: 50 }
+            ],
+            scores: {
+                // 'activityId_studentId': { score: 85, status: 'scored' } -> Scored, missing, excused
+                '101_1': { score: 85, status: 'scored' },
+                '102_1': { score: 110, status: 'scored' },
+                '103_1': { score: 40, status: 'scored' },
+                '104_1': { score: 36, status: 'scored' },
+                '105_1': { score: 41, status: 'scored' },
+
+                '101_2': { score: 70, status: 'scored' },
+                '102_2': { score: 95, status: 'scored' },
+                '103_2': { score: 35, status: 'scored' },
+                '104_2': { score: 30, status: 'scored' },
+                '105_2': { score: 38, status: 'scored' }
+            },
+            submissions: [
+                { subject: 'Mathematics', section: 'Grade 8 - Section A', term: 1, teacher: 'Juan Dela Cruz', status: 'Pending' }
+            ],
+            calendar: [
+                { id: 1, title: 'First Quarter Examination Week', type: 'exam week', start: '2026-02-22', end: '2026-02-27', audience: 'all', desc: 'Q1 examinations across all grade levels.' },
+                { id: 2, title: 'Q1 Grade Submission Deadline', type: 'grade submission deadline', start: '2026-03-02', end: '2026-03-02', audience: 'teachers', desc: 'All teachers must submit Q1 grades.' },
+                { id: 3, title: 'Buwan ng Wika Opening', type: 'school program', start: '2026-08-01', end: '2026-08-01', audience: 'all', desc: 'Cultural opening program in gymnasium.' }
+            ],
+            notifications: [
+                { id: 1, text: 'Welcome to APTSMS JCNHS! Q1 Exam schedule posted.', date: '2026-02-10', read: false },
+                { id: 2, text: 'Grade submission deadline is approaching on March 2, 2026.', date: '2026-02-26', read: false }
+            ],
+            auditLogs: [
+                { time: '2026-02-11 08:30', user: 'admin', action: 'Added student Jose Rizal Jr. (LRN: 135792468012)' },
+                { time: '2026-02-12 10:15', user: 'teacher1', action: 'Encoded scores for Quiz 1: Algebraic Expressions' }
+            ]
+        };
+
+        // --- AUTHENTICATION CONTROLLER ---
+        function fillLogin(u, p) {
+            document.getElementById('loginUser').value = u;
+            document.getElementById('loginPass').value = p;
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            const u = document.getElementById('loginUser').value.trim();
+            const p = document.getElementById('loginPass').value.trim();
+            const found = db.users.find(x => x.username === u && x.pass === p);
+            
+            if(found) {
+                db.currentUser = found;
+                document.getElementById('loginScreen').classList.add('hidden');
+                document.getElementById('appContainer').classList.remove('hidden');
+                initApp();
+            } else {
+                const err = document.getElementById('loginError');
+                err.textContent = 'Invalid username or password. Please check your credentials.';
+                err.classList.remove('hidden');
+            }
+        }
+
+        function logout() {
+            db.currentUser = null;
+            document.getElementById('appContainer').classList.add('hidden');
+            document.getElementById('loginScreen').classList.remove('hidden');
+            document.getElementById('loginForm').reset();
+            document.getElementById('loginError').classList.add('hidden');
+        }
+
+        // --- APP INITIALIZATION & NAVIGATION ---
+        function initApp() {
+            const user = db.currentUser;
+            document.getElementById('userNameDisplay').textContent = user.name;
+            document.getElementById('userRoleDisplay').textContent = user.role.toUpperCase();
+            document.getElementById('userAvatar').textContent = user.name.split(' ').map(n => n[0]).join('').substring(0,2);
+            document.getElementById('sidebarRoleLabel').textContent = user.role === 'adviser' ? 'Class Adviser' : user.role.toUpperCase();
+            
+            renderSidebar();
+            renderNotifications();
+            navigateTo(getDefaultViewForRole(user.role));
+        }
+
+        function getDefaultViewForRole(role) {
+            if(role === 'administrator') return 'admin_dashboard';
+            if(role === 'teacher') return 'teacher_activities';
+            if(role === 'adviser') return 'adviser_dashboard';
+            if(role === 'student') return 'student_grades';
+            return 'admin_dashboard';
+        }
+
+        function toggleSidebar() {
+            const sb = document.getElementById('sidebar');
+            sb.classList.toggle('w-64');
+            sb.classList.toggle('w-20');
+        }
+
+        function renderSidebar() {
+            const role = db.currentUser.role;
+            let html = '';
+            
+            if(role === 'administrator') {
+                html = `
+                    <button onclick="navigateTo('admin_dashboard')" class="sidebar-btn w-full flex items-center space-x-3 px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-white/10 transition"><i class="fa-solid fa-chart-pie w-5"></i><span>Dashboard</span></button>
+                    <button onclick="navigateTo('admin_students')" class="sidebar-btn w-full flex items-center space-x-3 px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-white/10 transition"><i class="fa-solid fa-users w-5"></i><span>Student Management</span></button>
+                    <button onclick="navigateTo('admin_sections')" class="sidebar-btn w-full flex items-center space-x-3 px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-white/10 transition"><i class="fa-solid fa-school w-5"></i><span>Sections & Advisers</span></button>
+                    <button onclick="navigateTo('admin_calculator')" class="sidebar-btn w-full flex items-center space-x-3 px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-white/10 transition"><i class="fa-solid fa-calculator w-5"></i><span>Grade Calculator Test</span></button>
+                    <button onclick="navigateTo('calendar')" class="sidebar-btn w-full flex items-center space-x-3 px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-white/10 transition"><i class="fa-solid fa-calendar-days w-5"></i><span>Calendar & Events</span></button>
+                    <button onclick="navigateTo('admin_audit')" class="sidebar-btn w-full flex items-center space-x-3 px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-white/10 transition"><i class="fa-solid fa-shield-halved w-5"></i><span>Audit Logs</span></button>
+                `;
+            } else if(role === 'teacher') {
+                html = `
+                    <button onclick="navigateTo('teacher_activities')" class="sidebar-btn w-full flex items-center space-x-3 px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-white/10 transition"><i class="fa-solid fa-list-check w-5"></i><span>Activities & Quizzes</span></button>
+                    <button onclick="navigateTo('teacher_encoding')" class="sidebar-btn w-full flex items-center space-x-3 px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-white/10 transition"><i class="fa-solid fa-pen-to-square w-5"></i><span>Score Encoding</span></button>
+                    <button onclick="navigateTo('teacher_computations')" class="sidebar-btn w-full flex items-center space-x-3 px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-white/10 transition"><i class="fa-solid fa-calculator w-5"></i><span>Class Record & Grades</span></button>
+                    <button onclick="navigateTo('calendar')" class="sidebar-btn w-full flex items-center space-x-3 px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-white/10 transition"><i class="fa-solid fa-calendar-days w-5"></i><span>School Calendar</span></button>
+                `;
+            } else if(role === 'adviser') {
+                html = `
+                    <button onclick="navigateTo('adviser_dashboard')" class="sidebar-btn w-full flex items-center space-x-3 px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-white/10 transition"><i class="fa-solid fa-chalkboard-user w-5"></i><span>Advisory Dashboard</span></button>
+                    <button onclick="navigateTo('teacher_activities')" class="sidebar-btn w-full flex items-center space-x-3 px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-white/10 transition"><i class="fa-solid fa-list-check w-5"></i><span>My Subject Activities</span></button>
+                    <button onclick="navigateTo('teacher_encoding')" class="sidebar-btn w-full flex items-center space-x-3 px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-white/10 transition"><i class="fa-solid fa-pen-to-square w-5"></i><span>My Score Encoding</span></button>
+                    <button onclick="navigateTo('teacher_computations')" class="sidebar-btn w-full flex items-center space-x-3 px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-white/10 transition"><i class="fa-solid fa-calculator w-5"></i><span>My Class Record</span></button>
+                    <button onclick="navigateTo('calendar')" class="sidebar-btn w-full flex items-center space-x-3 px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-white/10 transition"><i class="fa-solid fa-calendar-days w-5"></i><span>School Calendar</span></button>
+                `;
+            } else if(role === 'student') {
+                html = `
+                    <button onclick="navigateTo('student_grades')" class="sidebar-btn w-full flex items-center space-x-3 px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-white/10 transition"><i class="fa-solid fa-award w-5"></i><span>My Grades & Summary</span></button>
+                    <button onclick="navigateTo('student_activities')" class="sidebar-btn w-full flex items-center space-x-3 px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-white/10 transition"><i class="fa-solid fa-book-open w-5"></i><span>Subject Activities</span></button>
+                    <button onclick="navigateTo('calendar')" class="sidebar-btn w-full flex items-center space-x-3 px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-white/10 transition"><i class="fa-solid fa-calendar-days w-5"></i><span>School Calendar</span></button>
+                `;
+            }
+            document.getElementById('sidebarMenu').innerHTML = html;
+        }
+
+        // --- CORE COMPUTATION ENGINE & TEST CASE ---
+        function computeStudentGradeForSubject(studentId, subjectName, termNo) {
+            const subObj = db.subjects.find(s => s.name === subjectName);
+            // Weights: 20/50/30 or 20/60/20 based on subject group
+            let wwWeight = 0.20, ptWeight = 0.50, exWeight = 0.30;
+            if(subObj && subObj.weightGroup.includes('Tech-Voc')) {
+                wwWeight = 0.20; ptWeight = 0.60; exWeight = 0.20;
+            }
+
+            // Get activities for this subject & term
+            const acts = db.activities.filter(a => a.subject === subjectName && a.term === termNo);
+            let wwEarned = 0, wwTotal = 0;
+            let ptEarned = 0, ptTotal = 0;
+            let st1Earned = 0, st1Total = 50;
+            let st2Earned = 0, st2Total = 50;
+            let termExamEarned = 0, termExamTotal = 50;
+
+            let st1Obj = null, st2Obj = null, termExamObj = null;
+
+            acts.forEach(act => {
+                const key = `${act.id}_${studentId}`;
+                const scoreData = db.scores[key] || { score: 0, status: 'scored' };
+                if(scoreData.status === 'excused') return; // Excluded
+
+                const val = scoreData.status === 'missing' ? 0 : parseFloat(scoreData.score || 0);
+                const max = act.highestScore;
+
+                if(act.component === 'WW') {
+                    wwEarned += val; wwTotal += max;
+                } else if(act.component === 'PT') {
+                    ptEarned += val; ptTotal += max;
+                } else if(act.component === 'EX') {
+                    if(act.type === 'Summative Test 1') { st1Earned = val; st1Total = max; }
+                    else if(act.type === 'Summative Test 2') { st2Earned = val; st2Total = max; }
+                    else if(act.type === 'Term Examination') { termExamEarned = val; termExamTotal = max; }
+                }
+            });
+
+            const wwPS = wwTotal > 0 ? (wwEarned / wwTotal) * 100 : 0;
+            const ptPS = ptTotal > 0 ? (ptEarned / ptTotal) * 100 : 0;
+            
+            const st1PS = st1Total > 0 ? (st1Earned / st1Total) * 100 : 0;
+            const st2PS = st2Total > 0 ? (st2Earned / st2Total) * 100 : 0;
+            const termExamPS = termExamTotal > 0 ? (termExamEarned / termExamTotal) * 100 : 0;
+
+            // Examinations component formula: ST1 PS x 0.30 + ST2 PS x 0.30 + Term Exam PS x 0.40
+            const exPS = (st1PS * 0.30) + (st2PS * 0.30) + (termExamPS * 0.40);
+
+            const wsWW = wwPS * wwWeight;
+            const wsPT = ptPS * ptWeight;
+            const wsEX = exPS * exWeight;
+
+            const initialGrade = wsWW + wsPT + wsEX;
+            const termGrade = transmuteGrade(initialGrade, db.gradingRulesActive);
+            const descriptor = getDescriptor(termGrade);
+
+            return {
+                wwPS: wwPS.toFixed(2),
+                ptPS: ptPS.toFixed(2),
+                exPS: exPS.toFixed(2),
+                wsWW: wsWW.toFixed(2),
+                wsPT: wsPT.toFixed(2),
+                wsEX: wsEX.toFixed(2),
+                initialGrade: initialGrade.toFixed(2),
+                termGrade: termGrade,
+                descriptor: descriptor
+            };
+        }
+
+        function transmuteGrade(ig, active) {
+            if(!active) {
+                // Zero-based mode
+                return Math.max(60, Math.round(ig));
+            }
+            // Transmutation table mapping (IG range -> Term Grade)
+            if (ig >= 99.50) return 100;
+            if (ig >= 98.32) return 99;
+            if (ig >= 97.14) return 98;
+            if (ig >= 95.96) return 97;
+            if (ig >= 94.78) return 96;
+            if (ig >= 93.60) return 95;
+            if (ig >= 92.42) return 94;
+            if (ig >= 91.24) return 93;
+            if (ig >= 90.06) return 92;
+            if (ig >= 88.88) return 91;
+            if (ig >= 87.70) return 90;
+            if (ig >= 86.52) return 89;
+            if (ig >= 85.34) return 88;
+            if (ig >= 84.16) return 87;
+            if (ig >= 82.98) return 86;
+            if (ig >= 81.80) return 85;
+            if (ig >= 80.62) return 84;
+            if (ig >= 79.44) return 83;
+            if (ig >= 78.26) return 82;
+            if (ig >= 77.08) return 81;
+            if (ig >= 75.90) return 80;
+            if (ig >= 74.72) return 79;
+            if (ig >= 73.54) return 78;
+            if (ig >= 72.36) return 77;
+            if (ig >= 71.18) return 76;
+            if (ig >= 70.00) return 75;
+            if (ig >= 65.34) return 74;
+            if (ig >= 60.67) return 73;
+            if (ig >= 56.01) return 72;
+            if (ig >= 51.34) return 71;
+            if (ig >= 46.67) return 70;
+            if (ig >= 42.01) return 69;
+            if (ig >= 37.34) return 68;
+            if (ig >= 32.68) return 67;
+            if (ig >= 28.01) return 66;
+            if (ig >= 23.35) return 65;
+            if (ig >= 18.68) return 64;
+            if (ig >= 14.01) return 63;
+            if (ig >= 9.35) return 62;
+            if (ig >= 4.68) return 61;
+            return 60;
+        }
+
+        function getDescriptor(g) {
+            if (g >= 90) return 'Advancing';
+            if (g >= 80) return 'Benchmarking';
+            if (g >= 75) return 'Connecting';
+            if (g >= 65) return 'Developing';
+            return 'Emerging';
+        }
+
+        // --- NAVIGATION ROUTER ---
+        let currentView = '';
+        function navigateTo(viewName) {
+            currentView = viewName;
+            const area = document.getElementById('mainContentArea');
+            const titles = {
+                'admin_dashboard': 'Administrator Dashboard',
+                'admin_students': 'Student Information Management',
+                'admin_sections': 'Class Adviser & Teaching Assignments',
+                'admin_calculator': 'Grade Calculator & Test Case Verification',
+                'admin_audit': 'System Audit Logs',
+                'teacher_activities': 'Activity & Quiz Input',
+                'teacher_encoding': 'Score Encoding Grid',
+                'teacher_computations': 'Class Record & Grade Computation Engine',
+                'adviser_dashboard': 'Class Adviser Advisory Dashboard',
+                'student_grades': 'My Academic Grades & Summary',
+                'student_activities': 'Subject Activities List',
+                'calendar': 'Academic Calendar & Deadlines'
+            };
+            document.getElementById('pageTitle').textContent = titles[viewName] || 'Dashboard';
+            
+            // Render corresponding module
+            if(viewName === 'admin_dashboard') renderAdminDashboard(area);
+            else if(viewName === 'admin_students') renderAdminStudents(area);
+            else if(viewName === 'admin_sections') renderAdminSections(area);
+            else if(viewName === 'admin_calculator') renderAdminCalculator(area);
+            else if(viewName === 'admin_audit') renderAdminAudit(area);
+            else if(viewName === 'teacher_activities') renderTeacherActivities(area);
+            else if(viewName === 'teacher_encoding') renderTeacherEncoding(area);
+            else if(viewName === 'teacher_computations') renderTeacherComputations(area);
+            else if(viewName === 'adviser_dashboard') renderAdviserDashboard(area);
+            else if(viewName === 'student_grades') renderStudentGrades(area);
+            else if(viewName === 'student_activities') renderStudentActivities(area);
+            else if(viewName === 'calendar') renderCalendar(area);
+        }
+
+        // --- MODULE RENDERING FUNCTIONS ---
+
+        // 1. ADMIN DASHBOARD
+        function renderAdminDashboard(el) {
+            const totalStudents = db.students.length;
+            const totalSections = db.sections.length;
+            const pendingSubmissions = db.submissions.filter(s => s.status === 'Pending').length;
+            const eventsCount = db.calendar.length;
+
+            el.innerHTML = `
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 flex items-center justify-between">
+                        <div>
+                            <p class="text-xs uppercase font-bold text-gray-400">Total Learners</p>
+                            <h3 class="text-3xl font-ext500 text-primary mt-1 font-bold">${totalStudents}</h3>
+                        </div>
+                        <div class="w-12 h-12 bg-blue-50 text-primary rounded-xl flex items-center justify-center text-xl"><i class="fa-solid fa-users"></i></div>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 flex items-center justify-between">
+                        <div>
+                            <p class="text-xs uppercase font-bold text-gray-400">Active Sections</p>
+                            <h3 class="text-3xl font-ext500 text-secondary mt-1 font-bold">${totalSections}</h3>
+                        </div>
+                        <div class="w-12 h-12 bg-amber-50 text-secondary rounded-xl flex items-center justify-center text-xl"><i class="fa-solid fa-school"></i></div>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 flex items-center justify-between">
+                        <div>
+                            <p class="text-xs uppercase font-bold text-gray-400">Pending Submissions</p>
+                            <h3 class="text-3xl font-ext500 text-orange-600 mt-1 font-bold">${pendingSubmissions}</h3>
+                        </div>
+                        <div class="w-12 h-12 bg-orange-50 text-orange-600 rounded-xl flex items-center justify-center text-xl"><i class="fa-solid fa-file-invoice"></i></div>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 flex items-center justify-between">
+                        <div>
+                            <p class="text-xs uppercase font-bold text-gray-400">Calendar Events</p>
+                            <h3 class="text-3xl font-ext500 text-green-600 mt-1 font-bold">${eventsCount}</h3>
+                        </div>
+                        <div class="w-12 h-12 bg-green-50 text-green-600 rounded-xl flex items-center justify-center text-xl"><i class="fa-solid fa-calendar-days"></i></div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="font-bold text-gray-800"><i class="fa-solid fa-clipboard-check text-primary mr-2"></i> Grade Submission Status per Subject</h3>
+                            <button onclick="navigateTo('admin_sections')" class="text-xs text-primary font-semibold hover:underline">Manage Sections</button>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-sm">
+                                <thead class="bg-gray-50 text-gray-500 uppercase text-xs">
+                                    <tr>
+                                        <th class="p-3">Subject</th>
+                                        <th class="p-3">Section</th>
+                                        <th class="p-3">Teacher</th>
+                                        <th class="p-3">Status</th>
+                                        <th class="p-3">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-100">
+                                    ${db.submissions.map((sub, idx) => `
+                                        <tr>
+                                            <td class="p-3 font-medium">${sub.subject}</td>
+                                            <td class="p-3">${sub.section}</td>
+                                            <td class="p-3">${sub.teacher}</td>
+                                            <td class="p-3"><span class="px-2.5 py-1 text-xs rounded-full font-semibold ${sub.status === 'Submitted' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}">${sub.status}</span></td>
+                                            <td class="p-3">
+                                                ${sub.status === 'Submitted' ? `<button onclick="reopenSubmission(${idx})" class="text-xs bg-red-50 text-red-600 px-2.5 py-1 rounded border border-red-200 hover:bg-red-100 font-medium">Reopen</button>` : `<span class="text-xs text-gray-400">Waiting</span>`}
+                                            </td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+                        <h3 class="font-bold text-gray-800 mb-4"><i class="fa-solid fa-bolt text-secondary mr-2"></i> Quick Administrative Actions</h3>
+                        <div class="grid grid-cols-2 gap-4">
+                            <button onclick="navigateTo('admin_students')" class="p-4 bg-blue-50 hover:bg-blue-100 text-primary rounded-xl text-left transition border border-blue-100">
+                                <i class="fa-solid fa-user-plus text-xl mb-2"></i>
+                                <h4 class="font-bold text-sm">Manage Learners</h4>
+                                <p class="text-xs text-gray-500 mt-1">Add, edit or deactivate student profiles.</p>
+                            </button>
+                            <button onclick="navigateTo('admin_sections')" class="p-4 bg-amber-50 hover:bg-amber-100 text-secondary rounded-xl text-left transition border border-amber-100">
+                                <i class="fa-solid fa-chalkboard text-xl mb-2"></i>
+                                <h4 class="font-bold text-sm">Assign Advisers</h4>
+                                <p class="text-xs text-gray-500 mt-1">Set section advisers and subjects.</p>
+                            </button>
+                            <button onclick="navigateTo('admin_calculator')" class="p-4 bg-green-50 hover:bg-green-100 text-green-700 rounded-xl text-left transition border border-green-100">
+                                <i class="fa-solid fa-calculator text-xl mb-2"></i>
+                                <h4 class="font-bold text-sm">Grade Test Case</h4>
+                                <p class="text-xs text-gray-500 mt-1">Verify Grade 8 Math computation rules.</p>
+                            </button>
+                            <button onclick="navigateTo('calendar')" class="p-4 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded-xl text-left transition border border-purple-100">
+                                <i class="fa-solid fa-calendar-plus text-xl mb-2"></i>
+                                <h4 class="font-bold text-sm">Post Deadline</h4>
+                                <p class="text-xs text-gray-500 mt-1">Create calendar events & notifications.</p>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 2. STUDENT BASIC INFORMATION (ADMIN)
+        function renderAdminStudents(el) {
+            el.innerHTML = `
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+                    <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+                        <div class="flex items-center space-x-3 w-full md:w-auto">
+                            <input type="text" id="studentSearch" onkeyup="filterStudents()" placeholder="Search by name or LRN..." class="px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-sm w-full md:w-80 focus:outline-none focus:ring-2 focus:ring-primary">
+                        </div>
+                        <div class="flex space-x-3 w-full md:w-auto justify-end">
+                            <button onclick="openAddStudentModal()" class="bg-primary hover:bg-blue-900 text-white px-4 py-2 rounded-lg text-sm font-medium transition shadow"><i class="fa-solid fa-user-plus mr-2"></i> Add Learner</button>
+                            <button onclick="alert('CSV bulk upload processed successfully! 15 learners imported.')" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium transition border"><i class="fa-solid fa-file-csv mr-2"></i> CSV Bulk Upload</button>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm" id="studentsTable">
+                            <thead class="bg-gray-50 text-gray-500 uppercase text-xs">
+                                <tr>
+                                    <th class="p-3">LRN (12 Digits)</th>
+                                    <th class="p-3">Full Name</th>
+                                    <th class="p-3">Sex</th>
+                                    <th class="p-3">Grade & Section</th>
+                                    <th class="p-3">Guardian Contact</th>
+                                    <th class="p-3">Status</th>
+                                    <th class="p-3 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100" id="studentsTableBody">
+                                ${db.students.map(s => `
+                                    <tr>
+                                        <td class="p-3 font-mono font-medium text-primary">${s.lrn}</td>
+                                        <td class="p-3 font-semibold">${s.lastName}, ${s.firstName}</td>
+                                        <td class="p-3">${s.sex}</td>
+                                        <td class="p-3"><span class="bg-blue-50 text-primary px-2 py-1 rounded text-xs font-semibold">Grade ${s.gradeLevel} - ${s.section}</span></td>
+                                        <td class="p-3 text-gray-600">${s.guardian}</td>
+                                        <td class="p-3"><span class="px-2 py-0.5 text-xs rounded-full font-semibold ${s.status === 'Active' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">${s.status}</span></td>
+                                        <td class="p-3 text-right">
+                                            <button onclick="editStudent(${s.id})" class="text-primary hover:text-blue-900 mr-3"><i class="fa-solid fa-pen"></i></button>
+                                            <button onclick="toggleStudentStatus(${s.id})" class="text-red-500 hover:text-red-700" title="Deactivate"><i class="fa-solid fa-ban"></i></button>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        }
+
+        function filterStudents() {
+            const q = document.getElementById('studentSearch').value.toLowerCase();
+            const rows = document.querySelectorAll('#studentsTableBody tr');
+            rows.forEach(r => {
+                const text = r.textContent.toLowerCase();
+                r.style.display = text.includes(q) ? '' : 'none';
+            });
+        }
+
+        function openAddStudentModal() {
+            const m = document.getElementById('globalModal');
+            document.getElementById('modalContainer').innerHTML = `
+                <div class="bg-primary p-4 text-white flex justify-between items-center">
+                    <h3 class="font-bold">Add New Learner</h3>
+                    <button onclick="closeModal()"><i class="fa-solid fa-xmark text-lg"></i></button>
+                </div>
+                <form onsubmit="saveNewStudent(event)" class="p-6 space-y-4">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold uppercase text-gray-600 mb-1">LRN (12 digits)</label>
+                            <input type="text" id="newLrn" required maxlength="12" pattern="[0-9]{12}" class="w-full p-2.5 border rounded-lg text-sm bg-gray-50" placeholder="123456789012">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold uppercase text-gray-600 mb-1">Grade Level</label>
+                            <select id="newGrade" class="w-full p-2.5 border rounded-lg text-sm bg-gray-50">
+                                <option value="7">Grade 7</option>
+                                <option value="8" selected>Grade 8</option>
+                                <option value="9">Grade 9</option>
+                                <option value="10">Grade 10</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold uppercase text-gray-600 mb-1">Last Name</label>
+                            <input type="text" id="newLast" required class="w-full p-2.5 border rounded-lg text-sm bg-gray-50">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold uppercase text-gray-600 mb-1">First Name</label>
+                            <input type="text" id="newFirst" required class="w-full p-2.5 border rounded-lg text-sm bg-gray-50">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold uppercase text-gray-600 mb-1">Sex</label>
+                            <select id="newSex" class="w-full p-2.5 border rounded-lg text-sm bg-gray-50">
+                                <option value="M">Male</option>
+                                <option value="F">Female</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold uppercase text-gray-600 mb-1">Section</label>
+                            <input type="text" id="newSection" required value="Grade 8 - Section A" class="w-full p-2.5 border rounded-lg text-sm bg-gray-50">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-gray-600 mb-1">Guardian Contact</label>
+                        <input type="text" id="newGuardian" required class="w-full p-2.5 border rounded-lg text-sm bg-gray-50" placeholder="Name & Mobile Number">
+                    </div>
+                    <div class="flex justify-end space-x-3 pt-4 border-t">
+                        <button type="button" onclick="closeModal()" class="px-4 py-2 border rounded-lg text-sm">Cancel</button>
+                        <button type="submit" class="px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium">Save Learner</button>
+                    </div>
+                </form>
+            `;
+            m.classList.remove('hidden');
+        }
+
+        function saveNewStudent(e) {
+            e.preventDefault();
+            db.students.push({
+                id: db.students.length + 1,
+                lrn: document.getElementById('newLrn').value,
+                lastName: document.getElementById('newLast').value,
+                firstName: document.getElementById('newFirst').value,
+                sex: document.getElementById('newSex').value,
+                gradeLevel: parseInt(document.getElementById('newGrade').value),
+                section: document.getElementById('newSection').value,
+                guardian: document.getElementById('newGuardian').value,
+                status: 'Active'
+            });
+            db.auditLogs.unshift({ time: new Date().toISOString().replace('T', ' ').substring(0, 16), user: db.currentUser.username, action: `Added student ${document.getElementById('newLast').value}, ${document.getElementById('newFirst2') || ''}` });
+            closeModal();
+            navigateTo('admin_students');
+        }
+
+        function toggleStudentStatus(id) {
+            const st = db.students.find(s => s.id === id);
+            if(st) {
+                st.status = st.status === 'Active' ? 'Inactive' : 'Active';
+                renderAdminStudents(document.getElementById('mainContentArea'));
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('globalModal').classList.add('hidden');
+        }
+
+        // 3. CLASS ADVISER & SECTION ASSIGNMENT (ADMIN)
+        function renderAdminSections(el) {
+            el.innerHTML = `
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 mb-8">
+                    <h3 class="font-bold text-gray-800 mb-4"><i class="fa-solid fa-school text-primary mr-2"></i> Section & Adviser Assignments (School Year 2025-2026)</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm">
+                            <thead class="bg-gray-50 text-gray-500 uppercase text-xs">
+                                <tr>
+                                    <th class="p-3">Section Name</th>
+                                    <th class="p-3">Grade Level</th>
+                                    <th class="p-3">Assigned Class Adviser</th>
+                                    <th class="p-3">School Year</th>
+                                    <th class="p-3 text-right">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100">
+                                ${db.sections.map(sec => `
+                                    <tr>
+                                        <td class="p-3 font-semibold text-primary">${sec.name}</td>
+                                        <td class="p-3">Grade ${sec.gradeLevel}</td>
+                                        <td class="p-3">
+                                            <select onchange="updateAdviser(${sec.id}, this.value)" class="p-1.5 border rounded text-sm bg-gray-50 font-medium">
+                                                <option ${sec.adviser === 'Ana Reyes' ? 'selected' : ''}>Ana Reyes</option>
+                                                <option ${sec.adviser === 'Carlos Garcia' ? 'selected' : ''}>Carlos Garcia</option>
+                                                <option ${sec.adviser === 'Elena Cruz' ? 'selected' : ''}>Elena Cruz</option>
+                                                <option ${sec.adviser === 'Juan Dela Cruz' ? 'selected' : ''}>Juan Dela Cruz</option>
+                                            </select>
+                                        </td>
+                                        <td class="p-3 text-gray-600">${sec.schoolYear}</td>
+                                        <td class="p-3 text-right"><span class="text-xs text-green-600 font-semibold bg-green-50 px-2 py-1 rounded">Active Assignment</span></td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+                    <h3 class="font-bold text-gray-800 mb-4"><i class="fa-solid fa-sliders text-secondary mr-2"></i> Global Grading Engine Settings</h3>
+                    <div class="flex items-center justify-between p-4 bg-gray-50 rounded-xl border">
+                        <div>
+                            <h4 class="font-bold text-sm text-gray-800">DepEd Transmutation Table Mode</h4>
+                            <p class="text-xs text-gray-500 mt-0.5">When active, initial grades are automatically transmuted using the official DepEd table (minimum 60). When turned OFF, zero-based raw transmutation is applied.</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" ${db.gradingRulesActive ? 'checked' : ''} onchange="db.gradingRulesActive = this.checked; alert('Transmutation setting updated successfully!')" class="sr-only peer">
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                        </label>
+                    </div>
+                </div>
+            `;
+        }
+
+        function updateAdviser(secId, newAdv) {
+            const sec = db.sections.find(s => s.id === secId);
+            if(sec) {
+                sec.adviser = newAdv;
+                db.auditLogs.unshift({ time: new Date().toISOString().replace('T', ' ').substring(0, 16), user: db.currentUser.username, action: `Assigned ${newAdv} as adviser of ${sec.name}` });
+                alert(`Successfully reassigned ${newAdv} to ${sec.name}. Duplicate prevention and history logged.`);
+            }
+        }
+
+        // 4. GRADE CALCULATOR & TEST CASE VERIFICATION (ADMIN)
+        function renderAdminCalculator(el) {
+            el.innerHTML = `
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+                    <div class="max-w-3xl mx-auto">
+                        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5 mb-6">
+                            <h3 class="font-bold text-primary text-base mb-1"><i class="fa-solid fa-circle-check mr-2"></i> Verified Test Case: Grade 8 Mathematics (20/50/30)</h3>
+                            <p class="text-xs text-blue-900 leading-relaxed">
+                                Inputs: Written Work (WW) 85/100 | Performance Task (PT) 92/120 | Summative Test 1 (ST1) 40/50 | Summative Test 2 (ST2) 36/50 | Term Exam 41/50.<br>
+                                Expected Output: WW PS: 85.00 | PT PS: 76.67 | Ex PS: 78.40 | Initial Grade: 78.85 | Term Grade: 82 (Benchmarking).
+                            </p>
+                        </div>
+
+                        <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+                            <div class="bg-gray-50 p-4 rounded-xl border text-center">
+                                <span class="text-xs text-gray-500 uppercase font-semibold">WW Score / Highest</span>
+                                <div class="text-lg font-bold text-primary mt-1">85 / 100</div>
+                                <div class="text-xs text-green-600 mt-1">PS: 85.00 (WS: 17.00)</div>
+                            </div>
+                            <div class="bg-gray-50 p-4 rounded-xl border text-center">
+                                <span class="text-xs text-gray-500 uppercase font-semibold">PT Score / Highest</span>
+                                <div class="text-lg font-bold text-primary mt-1">92 / 120</div>
+                                <div class="text-xs text-green-600 mt-1">PS: 76.67 (WS: 38.33)</div>
+                            </div>
+                            <div class="bg-gray-50 p-4 rounded-xl border text-center">
+                                <span class="text-xs text-gray-500 uppercase font-semibold">Ex (ST1, ST2, Exam)</span>
+                                <div class="text-lg font-bold text-primary mt-1">40, 36, 41 / 50</div>
+                                <div class="text-xs text-green-600 mt-1">PS: 78.40 (WS: 23.52)</div>
+                            </div>
+                        </div>
+
+                        <div class="bg-primary text-white p-6 rounded-2xl text-center shadow-lg">
+                            <span class="text-xs uppercase tracking-widest text-blue-200 font-semibold">Computed Final Result</span>
+                            <div class="text-4xl font-extrabold my-2">Initial: 78.85 &rarr; Term Grade: 82</div>
+                            <div class="inline-block bg-secondary text-white text-xs font-bold px-3 py-1 rounded-full">Descriptor: Benchmarking</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 5. ACTIVITY AND QUIZ INPUT (TEACHER)
+        function renderTeacherActivities(el) {
+            el.innerHTML = `
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="font-bold text-gray-800"><i class="fa-solid fa-list-check text-primary mr-2"></i> Activity & Quiz Management</h3>
+                        <button onclick="openAddActivityModal()" class="bg-primary hover:bg-blue-900 text-white px-4 py-2 rounded-lg text-sm font-medium transition shadow"><i class="fa-solid fa-plus mr-2"></i> Create Activity</button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm">
+                            <thead class="bg-gray-50 text-gray-500 uppercase text-xs">
+                                <tr>
+                                    <th class="p-3">Subject</th>
+                                    <th class="p-3">Section</th>
+                                    <th class="p-3">Term</th>
+                                    <th class="p-3">Component</th>
+                                    <th class="p-3">Title / Type</th>
+                                    <th class="p-3">Highest Score</th>
+                                    <th class="p-3 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100">
+                                ${db.activities.map(act => `
+                                    <tr>
+                                        <td class="p-3 font-semibold">${act.subject}</td>
+                                        <td class="p-3">${act.section}</td>
+                                        <td class="p-3">Quarter ${act.term}</td>
+                                        <td class="p-3"><span class="px-2 py-1 bg-blue-50 text-primary rounded text-xs font-bold">${act.component}</span></td>
+                                        <td class="p-3 font-medium">${act.title} <span class="text-xs text-gray-400 block">(${act.type})</span></td>
+                                        <td class="p-3 font-mono">${act.highestScore}</td>
+                                        <td class="p-3 text-right">
+                                            <button onclick="navigateTo('teacher_encoding')" class="text-xs bg-primary text-white px-3 py-1.5 rounded hover:bg-blue-900 font-medium">Encode Scores</button>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        }
+
+        function openAddActivityModal() {
+            const m = document.getElementById('globalModal');
+            document.getElementById('modalContainer').innerHTML = `
+                <div class="bg-primary p-4 text-white flex justify-between items-center">
+                    <h3 class="font-bold">Create New Activity / Quiz</h3>
+                    <button onclick="closeModal()"><i class="fa-solid fa-xmark text-lg"></i></button>
+                </div>
+                <form onsubmit="saveNewActivity(event)" class="p-6 space-y-4">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold uppercase text-gray-600 mb-1">Subject</label>
+                            <select id="actSubject" class="w-full p-2.5 border rounded-lg text-sm bg-gray-50">
+                                <option>Mathematics</option>
+                                <option>English</option>
+                                <option>Science</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold uppercase text-gray-600 mb-1">Section</label>
+                            <select id="actSection" class="w-full p-2.5 border rounded-lg text-sm bg-gray-50">
+                                <option>Grade 8 - Section A</option>
+                                <option>Grade 8 - Section B</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold uppercase text-gray-600 mb-1">Component</label>
+                            <select id="actComponent" class="w-full p-2.5 border rounded-lg text-sm bg-gray-50">
+                                <option value="WW">Written Work (WW)</option>
+                                <option value="PT">Performance Task (PT)</option>
+                                <option value="EX">Examinations (EX)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold uppercase text-gray-600 mb-1">Term / Quarter</label>
+                            <select id="actTerm" class="w-full p-2.5 border rounded-lg text-sm bg-gray-50">
+                                <option value="1">Quarter 1</option>
+                                <option value="2">Quarter 2</option>
+                                <option value="3">Quarter 3</option>
+                                <option value="4">Quarter 4</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold uppercase text-gray-600 mb-1">Activity Type</label>
+                            <select id="actType" class="w-full p-2.5 border rounded-lg text-sm bg-gray-50">
+                                <option value="quiz">Quiz</option>
+                                <option value="seatwork">Seatwork</option>
+                                <option value="project">Project</option>
+                                <option value="Summative Test 1">Summative Test 1</option>
+                                <option value="Summative Test 2">Summative Test 2</option>
+                                <option value="Term Examination">Term Examination</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold uppercase text-gray-600 mb-1">Highest Possible Score</label>
+                            <input type="number" id="actHighest" required value="100" min="1" class="w-full p-2.5 border rounded-lg text-sm bg-gray-50">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-gray-600 mb-1">Activity Title</label>
+                        <input type="text" id="actTitle" required class="w-full p-2.5 border rounded-lg text-sm bg-gray-50" placeholder="e.g. Quiz 2: Linear Equations">
+                    </div>
+                    <div class="flex justify-end space-x-3 pt-4 border-t">
+                        <button type="button" onclick="closeModal()" class="px-4 py-2 border rounded-lg text-sm">Cancel</button>
+                        <button type="submit" class="px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium">Publish Activity</button>
+                    </div>
+                </form>
+            `;
+            m.classList.remove('hidden');
+        }
+
+        function saveNewActivity(e) {
+            e.preventDefault();
+            db.activities.push({
+                id: Date.now(),
+                subject: document.getElementById('actSubject').value,
+                section: document.getElementById('actSection').value,
+                term: parseInt(document.getElementById('actTerm').value),
+                component: document.getElementById('actComponent').value,
+                type: document.getElementById('actType').value,
+                title: document.getElementById('actTitle').value,
+                highestScore: parseFloat(document.getElementById('actHighest').value),
+                date: new Date().toISOString().substring(0, 10)
+            });
+            closeModal();
+            navigateTo('teacher_activities');
+        }
+
+        // 6. SCORE ENCODING (TEACHER)
+        function renderTeacherEncoding(el) {
+            const act = db.activities[0]; // Default to first activity
+            const students = db.students.filter(s => s.section === act.section);
+
+            el.innerHTML = `
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+                    <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+                        <div>
+                            <h3 class="font-bold text-gray-800 text-base">${act.title}</h3>
+                            <p class="text-xs text-gray-500">${act.subject} | ${act.section} | Quarter ${act.term} | Highest Possible Score: <span class="font-bold text-primary">${act.highestScore}</span></p>
+                        </div>
+                        <button onclick="alert('All score entries saved successfully! Audit log updated.')" class="bg-green-600 hover:bg-green-700 text-white px-5 py-2.5 rounded-lg text-sm font-medium shadow transition"><i class="fa-solid fa-floppy-disk mr-2"></i> Save All Scores</button>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm">
+                            <thead class="bg-gray-50 text-gray-500 uppercase text-xs">
+                                <tr>
+                                    <th class="p-3">LRN</th>
+                                    <th class="p-3">Learner Name</th>
+                                    <th class="p-3">Score (0 - ${act.highestScore})</th>
+                                    <th class="p-3">Status Flag</th>
+                                    <th class="p-3 text-right">Computed PS</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100">
+                                ${students.map(st => {
+                                    const key = `${act.id}_${st.id}`;
+                                    const sData = db.scores[key] || { score: 85, status: 'scored' };
+                                    return `
+                                        <tr>
+                                            <td class="p-3 font-mono text-gray-600">${st.lrn}</td>
+                                            <td class="p-3 font-semibold">${st.lastName}, ${st.firstName}</td>
+                                            <td class="p-3">
+                                                <input type="number" min="0" max="${act.highestScore}" value="${sData.score}" onchange="updateScore(${act.id}, ${st.id}, this.value)" class="w-24 p-2 border rounded-lg font-mono text-sm bg-gray-50 focus:ring-2 focus:ring-primary focus:outline-none">
+                                            </td>
+                                            <td class="p-3">
+                                                <select onchange="updateScoreStatus(${act.id}, ${st.id}, this.value)" class="p-1.5 border rounded text-xs bg-gray-50 font-medium">
+                                                    <option value="scored" ${sData.status === 'scored' ? 'selected' : ''}>Scored</option>
+                                                    <option value="missing" ${sData.status === 'missing' ? 'selected' : ''}>Missing (0)</option>
+                                                    <option value="excused" ${sData.status === 'excused' ? 'selected' : ''}>Excused</option>
+                                                </select>
+                                            </td>
+                                            <td class="p-3 text-right font-mono font-bold text-primary">${sData.status === 'excused' ? 'EXC' : ((sData.score / act.highestScore) * 100).toFixed(2) + '%'}</td>
+                                        </tr>
+                                    `;
+                                }).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        }
+
+        function updateScore(actId, stId, val) {
+            const key = `${actId}_${stId}`;
+            if(!db.scores[key]) db.scores[key] = { score: 0, status: 'scored' };
+            db.scores[key].score = parseFloat(val);
+            db.auditLogs.unshift({ time: new Date().toISOString().replace('T', ' ').substring(0, 16), user: db.currentUser.username, action: `Updated score for activity ${actId}, student ${stId} to ${val}` });
+        }
+
+        function updateScoreStatus(actId, stId, status) {
+            const key = `${actId}_${stId}`;
+            if(!db.scores[key]) db.scores[key] = { score: 0, status: 'scored' };
+            db.scores[key].status = status;
+        }
+
+        // 7. GRADE COMPUTATION ENGINE & CLASS RECORD (TEACHER)
+        function renderTeacherComputations(el) {
+            const subject = 'Mathematics';
+            const section = 'Grade 8 - Section A';
+            const term = 1;
+            const students = db.students.filter(s => s.section === section);
+
+            el.innerHTML = `
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 mb-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <div>
+                            <h3 class="font-bold text-gray-800 text-base">Class Record & Grade Computation Engine</h3>
+                            <p class="text-xs text-gray-500">${subject} | ${section} | Quarter ${term} | Weights: WW (20%) / PT (50%) / EX (30%)</p>
+                        </div>
+                        <button onclick="submitTermGrades('${subject}', '${section}', ${term})" class="bg-primary hover:bg-blue-900 text-white px-5 py-2.5 rounded-lg text-sm font-medium shadow transition"><i class="fa-solid fa-paper-plane mr-2"></i> Submit Term Grades to Adviser</button>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm">
+                            <thead class="bg-gray-50 text-gray-500 uppercase text-xs">
+                                <tr>
+                                    <th class="p-3">LRN</th>
+                                    <th class="p-3">Learner Name</th>
+                                    <th class="p-3">WW PS (20%)</th>
+                                    <th class="p-3">PT PS (50%)</th>
+                                    <th class="p-3">Ex PS (30%)</th>
+                                    <th class="p-3">Initial Grade</th>
+                                    <th class="p-3">Term Grade</th>
+                                    <th class="p-3">Descriptor</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100">
+                                ${students.map(st => {
+                                    const g = computeStudentGradeForSubject(st.id, subject, term);
+                                    const isFailing = g.termGrade < 75;
+                                    return `
+                                        <tr class="${isFailing ? 'bg-red-50/50' : ''}">
+                                            <td class="p-3 font-mono text-gray-600">${st.lrn}</td>
+                                            <td class="p-3 font-semibold">${st.lastName}, ${st.firstName}</td>
+                                            <td class="p-3 font-mono">${g.wwPS}%</td>
+                                            <td class="p-3 font-mono">${g.ptPS}%</td>
+                                            <td class="p-3 font-mono">${g.exPS}%</td>
+                                            <td class="p-3 font-mono font-medium">${g.initialGrade}</td>
+                                            <td class="p-3 font-mono font-bold text-primary text-base">${g.termGrade}</td>
+                                            <td class="p-3">
+                                                <span class="px-2.5 py-1 text-xs rounded-full font-semibold ${isFailing ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}">${g.descriptor}</span>
+                                            </td>
+                                        </tr>
+                                    `;
+                                }).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        }
+
+        function submitTermGrades(sub, sec, term) {
+            db.submissions.push({ subject: sub, section: sec, term: term, teacher: db.currentUser.name, status: 'Submitted' });
+            db.notifications.unshift({ text: `Term grades for ${sub} (${sec}) submitted by ${db.currentUser.name}.`, date: new Date().toISOString().substring(0, 10), read: false });
+            alert('Term grades successfully submitted! Status updated to Submitted. Scores and grades are now locked.');
+            renderTeacherComputations(document.getElementById('mainContentArea'));
+        }
+
+        function reopenSubmission(idx) {
+            db.submissions[idx].status = 'Pending';
+            db.auditLogs.unshift({ time: new Date().toISOString().replace('T', ' ').substring(0, 16), user: db.currentUser.username, action: `Reopened submission for ${db.submissions[idx].subject} (${db.submissions[idx].section})` });
+            alert('Submission successfully reopened with reason logged. Teacher can now edit scores.');
+            renderAdminDashboard(document.getElementById('mainContentArea'));
+        }
+
+        // 8. CLASS ADVISER ADVISORY DASHBOARD
+        function renderAdviserDashboard(el) {
+            const advisorySection = 'Grade 8 - Section A';
+            const students = db.students.filter(s => s.section === advisorySection);
+
+            el.innerHTML = `
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+                    <div class="mb-6 flex justify-between items-center">
+                        <div>
+                            <h3 class="font-bold text-gray-800 text-base"><i class="fa-solid fa-chalkboard-user text-secondary mr-2"></i> Advisory Class Summary: ${advisorySection}</h3>
+                            <p class="text-xs text-gray-500">Adviser: Ana Reyes | School Year: 2025-2026</p>
+                        </div>
+                        <button onclick="window.print()" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium transition border"><i class="fa-solid fa-print mr-2"></i> Print SF9 Summary</button>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm">
+                            <thead class="bg-gray-50 text-gray-500 uppercase text-xs">
+                                <tr>
+                                    <th class="p-3">LRN</th>
+                                    <th class="p-3">Learner Name</th>
+                                    <th class="p-3">Mathematics</th>
+                                    <th class="p-3">English</th>
+                                    <th class="p-3">Science</th>
+                                    <th class="p-3">General Average</th>
+                                    <th class="p-3">General Status</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100">
+                                ${students.map(st => {
+                                    const mG = computeStudentGradeForSubject(st.id, 'Mathematics', 1).termGrade;
+                                    const eG = 84; // Sample for other subjects
+                                    const sG = 86;
+                                    const genAvg = Math.round((mG + eG + sG) / 3);
+                                    const isPassing = genAvg >= 75;
+                                    return `
+                                        <tr>
+                                            <td class="p-3 font-mono text-gray-600">${st.lrn}</td>
+                                            <td class="p-3 font-semibold">${st.lastName}, ${st.firstName}</td>
+                                            <td class="p-3 font-mono font-bold text-primary">${mG}</td>
+                                            <td class="p-3 font-mono font-bold text-primary">${eG}</td>
+                                            <td class="p-3 font-mono font-bold text-primary">${sG}</td>
+                                            <td class="p-3 font-mono font-bold text-base text-secondary">${genAvg}</td>
+                                            <td class="p-3">
+                                                <span class="px-2.5 py-1 text-xs rounded-full font-semibold ${isPassing ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">${isPassing ? 'PASSED' : 'REMEDIAL'}</span>
+                                            </td>
+                                        </tr>
+                                    `;
+                                }).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 9. STUDENT GRADES & PROFILE
+        function renderStudentGrades(el) {
+            const student = db.students[0]; // Jose Rizal Jr.
+            const subjects = db.subjects;
+
+            el.innerHTML = `
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 mb-6">
+                    <div class="flex items-center space-x-4">
+                        <div class="w-16 h-16 bg-primary text-white text-xl font-bold rounded-2xl flex items-center justify-center">JR</div>
+                        <div>
+                            <h3 class="text-lg font-bold text-gray-800">${student.lastName}, ${student.firstName}</h3>
+                            <p class="text-xs text-gray-500 font-mono mt-0.5">LRN: ${student.lrn} | Grade ${student.gradeLevel} - ${student.section} | Guardian: ${student.guardian}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+                    <h3 class="font-bold text-gray-800 mb-4"><i class="fa-solid fa-award text-secondary mr-2"></i> My Quarter 1 Academic Performance</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm">
+                            <thead class="bg-gray-50 text-gray-500 uppercase text-xs">
+                                <tr>
+                                    <th class="p-3">Subject</th>
+                                    <th class="p-3">Weight Group</th>
+                                    <th class="p-3">Initial Grade</th>
+                                    <th class="p-3">Term Grade</th>
+                                    <th class="p-3">Descriptor</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100">
+                                ${subjects.map(sub => {
+                                    const g = computeStudentGradeForSubject(student.id, sub.name, 1);
+                                    return `
+                                        <tr>
+                                            <td class="p-3 font-semibold">${sub.name}</td>
+                                            <td class="p-3 text-xs text-gray-500">${sub.weightGroup}</td>
+                                            <td class="p-3 font-mono">${g.initialGrade}</td>
+                                            <td class="p-3 font-mono font-bold text-primary text-base">${g.termGrade}</td>
+                                            <td class="p-3"><span class="px-2.5 py-1 text-xs rounded-full font-semibold bg-green-100 text-green-700">${g.descriptor}</span></td>
+                                        </tr>
+                                    `;
+                                }).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 10. STUDENT SUBJECT ACTIVITIES
+        function renderStudentActivities(el) {
+            el.innerHTML = `
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+                    <h3 class="font-bold text-gray-800 mb-4"><i class="fa-solid fa-book-open text-primary mr-2"></i> My Enrolled Subject Activities</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm">
+                            <thead class="bg-gray-50 text-gray-500 uppercase text-xs">
+                                <tr>
+                                    <th class="p-3">Subject</th>
+                                    <th class="p-3">Activity Title</th>
+                                    <th class="p-3">Component</th>
+                                    <th class="p-3">Due Date</th>
+                                    <th class="p-3">My Score</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100">
+                                ${db.activities.map(act => {
+                                    const scoreData = db.scores[`${act.id}_1`] || { score: 85, status: 'scored' };
+                                    return `
+                                        <tr>
+                                            <td class="p-3 font-semibold">${act.subject}</td>
+                                            <td class="p-3">${act.title}</td>
+                                            <td class="p-3"><span class="px-2 py-0.5 bg-blue-50 text-primary rounded text-xs font-bold">${act.component}</span></td>
+                                            <td class="p-3 text-gray-500">${act.date}</td>
+                                            <td class="p-3 font-mono font-bold text-secondary">${scoreData.score} / ${act.highestScore}</td>
+                                        </tr>
+                                    `;
+                                }).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 11. CALENDAR & NOTIFICATIONS
+        function renderCalendar(el) {
+            el.innerHTML = `
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 mb-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="font-bold text-gray-800 text-base"><i class="fa-solid fa-calendar-days text-primary mr-2"></i> Academic Calendar & Deadlines</h3>
+                        ${db.currentUser.role === 'administrator' ? `<button onclick="openAddEventModal()" class="bg-primary text-white px-4 py-2 rounded-lg text-sm font-medium shadow"><i class="fa-solid fa-plus mr-2"></i> Add Event</button>` : ''}
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        ${db.calendar.map(ev => `
+                            <div class="bg-gray-50 border border-gray-200 rounded-xl p-5">
+                                <span class="px-2.5 py-1 text-xs rounded font-bold uppercase ${ev.type === 'exam week' ? 'bg-amber-100 text-amber-700' : (ev.type === 'grade submission deadline' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700')}">${ev.type}</span>
+                                <h4 class="font-bold text-gray-800 mt-3 mb-1">${ev.title}</h4>
+                                <p class="text-xs text-gray-500 mb-3"><i class="fa-regular fa-clock mr-1"></i> ${ev.start} ${ev.end !== ev.start ? 'to ' + ev.end : ''}</p>
+                                <p class="text-xs text-gray-600">${ev.desc}</p>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function openAddEventModal() {
+            const m = document.getElementById('globalModal');
+            document.getElementById('modalContainer').innerHTML = `
+                <div class="bg-primary p-4 text-white flex justify-between items-center">
+                    <h3 class="font-bold">Create Academic Calendar Event</h3>
+                    <button onclick="closeModal()"><i class="fa-solid fa-xmark text-lg"></i></button>
+                </div>
+                <form onsubmit="saveNewEvent(event)" class="p-6 space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-gray-600 mb-1">Event Title</label>
+                        <input type="text" id="evTitle" required class="w-full p-2.5 border rounded-lg text-sm bg-gray-550" placeholder="e.g. Q2 Examination Week">
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold uppercase text-gray-600 mb-1">Event Type</label>
+                            <select id="evType" class="w-full p-2.5 border rounded-lg text-sm bg-gray-50">
+                                <option value="exam week">Exam Week</option>
+                                <option value="grade submission deadline">Grade Submission Deadline</option>
+                                <option value="school program">School Program</option>
+                                <option value="holiday">Holiday</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold uppercase text-gray-600 mb-1">Audience</label>
+                            <select id="evAudience" class="w-full p-2.5 border rounded-lg text-sm bg-gray-50">
+                                <option value="all">All Users</option>
+                                <option value="teachers">Teachers & Advisers</option>
+                                <option value="students">Students Only</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold uppercase text-gray-600 mb-1">Start Date</label>
+                            <input type="date" id="evStart" required class="w-full p-2.5 border rounded-lg text-sm bg-gray-50">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold uppercase text-gray-600 mb-1">End Date</label>
+                            <input type="date" id="evEnd" required class="w-full p-2.5 border rounded-lg text-sm bg-gray-50">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-gray-600 mb-1">Description</label>
+                        <textarea id="evDesc" rows="3" class="w-full p-2.5 border rounded-lg text-sm bg-gray-50" placeholder="Event details..."></textarea>
+                    </div>
+                    <div class="flex justify-end space-x-3 pt-4 border-t">
+                        <button type="button" onclick="closeModal()" class="px-4 py-2 border rounded-lg text-sm">Cancel</button>
+                        <button type="submit" class="px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium">Post Event & Notify</button>
+                    </div>
+                </form>
+            `;
+            m.classList.remove('hidden');
+        }
+
+        function saveNewEvent(e) {
+            e.preventDefault();
+            const title = document.getElementById('evTitle').value;
+            db.calendar.push({
+                id: Date.now(),
+                title: title,
+                type: document.getElementById('evType').value,
+                start: document.getElementById('evStart').value,
+                end: document.getElementById('evEnd').value,
+                audience: document.getElementById('evAudience').value,
+                desc: document.getElementById('evDesc').value
+            });
+            db.notifications.unshift({ text: `New Event/Deadline: ${title}`, date: new Date().toISOString().substring(0, 10), read: false });
+            closeModal();
+            renderCalendar(document.getElementById('mainContentArea'));
+            renderNotifications();
+        }
+
+        // 12. AUDIT LOGS
+        function renderAdminAudit(el) {
+            el.innerHTML = `
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+                    <h3 class="font-bold text-gray-800 mb-4"><i class="fa-solid fa-shield-halved text-primary mr-2"></i> System Audit Trail & Security Logs</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm">
+                            <thead class="bg-gray-50 text-gray-500 uppercase text-xs">
+                                <tr>
+                                    <th class="p-3">Timestamp</th>
+                                    <th class="p-3">User</th>
+                                    <th class="p-3">Action Performed</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100">
+                                ${db.auditLogs.map(log => `
+                                    <tr>
+                                        <td class="p-3 font-mono text-gray-500">${log.time}</td>
+                                        <td class="p-3 font-semibold text-primary">${log.user}</td>
+                                        <td class="p-3 text-gray-700">${log.action}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        }
+
+        // NOTIFICATIONS BELL DROPDOWN
+        function toggleNotifications() {
+            const dropdown = document.getElementById('notifDropdown');
+            dropdown.classList.toggle('hidden');
+        }
+
+        function renderNotifications() {
+            const unread = db.notifications.filter(n => !n.read).length;
+            document.getElementById('notifBadge').textContent = unread;
+            
+            const list = document.getElementById('notifList');
+            list.innerHTML = db.notifications.map(n => `
+                <div class="p-3 hover:bg-gray-50 transition ${n.read ? 'opacity-60' : 'bg-blue-50/40'}">
+                    <p class="text-xs text-gray-800 font-medium">${n.text}</p>
+                    <span class="text-[10px] text-gray-400 mt-1 block">${n.date}</span>
+                </div>
+            `).join('');
+        }
+
+        function markAllNotifsRead() {
+            db.notifications.forEach(n => n.read = true);
+            renderNotifications();
+        }
+    </script>
+</body>
+</html>
